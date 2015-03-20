@@ -2,24 +2,35 @@
 var MainComponent = React.createClass({
 	getInitialState : function(){
 		return {
-			championNodes : []
+			filterText:'',
+			champions : []
 		};
+	},
+	handleUserIntput: function(filterText){
+		this.setState({ filterText: filterText});
 	},
 	componentDidMount : function(){
 		var _this = this;
 		$.get('https://ddragon.leagueoflegends.com/cdn/5.2.1/data/en_US/champion.json',function(result){
 			var data = $.map(result.data,function(champion,hoge){
-				return (<ChampionComponent name={hoge} />);
+				return hoge;
 			});
 			_this.setState({ champions : data });
 		});
 	},
 	render : function() {
+		var _this = this;
+		var data = $.map(this.state.champions,function(champion,hoge){
+			if( champion.toString().toLowerCase().search(_this.state.filterText.toLowerCase()) != -1 || _this.state.filterText === ""){
+				return (<ChampionComponent name={champion} />);
+			}
+		});
 		return (
 			<div className="MainComponent container-fluid">
 				<h1>Champions</h1>
+				<FilterBar filterText={this.state.filterText} onUserInput={this.handleUserIntput}/>
 				<div id="data">
-					{this.state.champions}
+					{data}
 				</div>
 			</div>
 		);
@@ -37,6 +48,21 @@ var ChampionComponent = React.createClass({
 				</div>
 			</div>
 		)
+	}
+});
+
+var FilterBar = React.createClass({
+	handleChange : function(){
+		this.props.onUserInput(
+			this.refs.filterTextInput.getDOMNode().value
+		)
+	},
+	render : function(){
+		return(
+			<form>
+				<input type="text" placeholder="filter..." ref="filterTextInput" value={this.props.filterText} onChange={this.handleChange} />
+			</form>
+		);
 	}
 });
 
